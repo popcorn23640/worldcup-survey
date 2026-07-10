@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台登录 - 世界杯观赛调查</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #0f1a2e;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-box {
+            background: linear-gradient(135deg, #1a2a44 0%, #16233b 100%);
+            border-radius: 16px;
+            padding: 36px 28px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .login-box h1 {
+            font-size: 20px;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #2a3d5c;
+            border-radius: 10px;
+            background: #1a2a44;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.2s;
+            font-family: inherit;
+        }
+        .login-box input:focus {
+            border-color: #00c853;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #00c853;
+            color: #0f1a2e;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            font-family: inherit;
+        }
+        .login-box button:active { opacity: 0.8; }
+        .error {
+            color: #ff5252;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>🔐 管理后台登录</h1>
+        <form action="/admin/do_login" method="POST">
+            <input type="password" name="password" placeholder="请输入管理员密码" required>
+            <button type="submit">登录</button>
+        </form>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+    </div>
+</body>
+</html>

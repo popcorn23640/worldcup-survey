@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026世界杯观赛调查</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #0f1a2e;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .header p {
+            color: #8899b4;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+        .progress-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 24px;
+        }
+        .progress-bar .dot {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: #25344a;
+            transition: background 0.3s;
+        }
+        .progress-bar .dot.active { background: #00c853; }
+        .progress-bar .dot.done { background: #00e676; }
+        .question-card {
+            background: linear-gradient(135deg, #1a2a44 0%, #16233b 100%);
+            border-radius: 16px;
+            padding: 28px 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            display: none;
+            animation: fadeIn 0.35s ease;
+        }
+        .question-card.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .question-number {
+            display: inline-block;
+            background: #00c853;
+            color: #0f1a2e;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 10px;
+            margin-bottom: 14px;
+        }
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .options {
+            display: flex;
+            gap: 12px;
+        }
+        .options .btn {
+            flex: 1;
+            padding: 16px 0;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .options .btn:active { transform: scale(0.96); }
+        .btn-yes {
+            background: #00c853;
+            color: #0f1a2e;
+        }
+        .btn-yes:hover { background: #00e676; }
+        .btn-no {
+            background: #ff1744;
+            color: #fff;
+        }
+        .btn-no:hover { background: #ff5252; }
+
+        /* Notes card */
+        .notes-label {
+            font-size: 15px;
+            color: #b0bcd4;
+            margin-bottom: 12px;
+        }
+        .notes-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #2a3d5c;
+            border-radius: 10px;
+            background: #0f1a2e;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.2s;
+            font-family: inherit;
+            resize: none;
+        }
+        .notes-input:focus {
+            border-color: #00c853;
+        }
+        .notes-input::placeholder {
+            color: #495a7a;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 16px 0;
+            border: none;
+            border-radius: 12px;
+            background: #00c853;
+            color: #0f1a2e;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .submit-btn:active { transform: scale(0.96); }
+        .submit-btn:disabled {
+            background: #25344a;
+            color: #495a7a;
+            cursor: not-allowed;
+        }
+
+        /* Thank you screen */
+        .thank-you {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+            animation: fadeIn 0.5s ease;
+            background: linear-gradient(135deg, #1a2a44 0%, #16233b 100%);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .thank-you.active { display: block; }
+        .thank-you .trophy { font-size: 64px; margin-bottom: 16px; }
+        .thank-you h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        .thank-you p {
+            color: #8899b4;
+            font-size: 15px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #495a7a;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">⚽</div>
+            <h1>2026 世界杯观赛调查</h1>
+            <p>选出你的观赛计划</p>
+        </div>
+
+        <div id="surveyArea" style="display:block">
+            <!-- Progress Bar (4 steps) -->
+            <div class="progress-bar">
+                <div class="dot" id="dot1"></div>
+                <div class="dot" id="dot2"></div>
+                <div class="dot" id="dot3"></div>
+                <div class="dot" id="dot4"></div>
+            </div>
+
+            <!-- Q1 -->
+            <div class="question-card active" data-q="1">
+                <span class="question-number">第 1 题</span>
+                <div class="question-text">你是否观看<br>11 号的世界杯直播？</div>
+                <div class="options">
+                    <button class="btn btn-yes" onclick="answer(1, '是')">是</button>
+                    <button class="btn btn-no" onclick="answer(1, '否')">否</button>
+                </div>
+            </div>
+
+            <!-- Q2 -->
+            <div class="question-card" data-q="2">
+                <span class="question-number">第 2 题</span>
+                <div class="question-text">你是否观看<br>12 号第一场世界杯直播？</div>
+                <div class="options">
+                    <button class="btn btn-yes" onclick="answer(2, '是')">是</button>
+                    <button class="btn btn-no" onclick="answer(2, '否')">否</button>
+                </div>
+            </div>
+
+            <!-- Q3 -->
+            <div class="question-card" data-q="3">
+                <span class="question-number">第 3 题</span>
+                <div class="question-text">你是否观看<br>12 号第二场世界杯直播？</div>
+                <div class="options">
+                    <button class="btn btn-yes" onclick="answer(3, '是')">是</button>
+                    <button class="btn btn-no" onclick="answer(3, '否')">否</button>
+                </div>
+            </div>
+
+            <!-- Notes 备注 -->
+            <div class="question-card" data-q="4">
+                <span class="question-number">备注（选填）</span>
+                <div class="notes-label">请填写您的称呼或备注信息</div>
+                <input class="notes-input" id="notesInput" type="text" placeholder="例如：您的姓名、昵称……" maxlength="100">
+                <button class="submit-btn" id="submitBtn" onclick="submitAnswers()" disabled>提交问卷</button>
+            </div>
+        </div>
+
+        <div class="thank-you" id="thankYou">
+            <div class="trophy">🏆</div>
+            <h2>感谢参与！</h2>
+            <p>你的回答已提交</p>
+        </div>
+
+        <div class="footer">
+            2026 世界杯 · 观赛调查
+        </div>
+    </div>
+
+    <script>
+        const answers = {};
+
+        function answer(q, val) {
+            answers['q' + q] = val;
+
+            // update progress dots
+            document.querySelectorAll('.progress-bar .dot').forEach((dot, i) => {
+                const idx = i + 1;
+                dot.classList.remove('active', 'done');
+                if (answers['q' + idx] !== undefined) {
+                    dot.classList.add('done');
+                }
+            });
+
+            // go to next step
+            const current = document.querySelector(`.question-card[data-q="${q}"]`);
+            const next = document.querySelector(`.question-card[data-q="${q + 1}"]`);
+            if (current) current.classList.remove('active');
+            if (next) {
+                next.classList.add('active');
+                // highlight current dot
+                document.querySelectorAll('.progress-bar .dot').forEach((dot, i) => {
+                    if (i === q) dot.classList.add('active');
+                });
+                // if it's the notes step, enable the button
+                if (q === 3) {
+                    document.getElementById('submitBtn').disabled = false;
+                }
+            }
+        }
+
+        function submitAnswers() {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '提交中…';
+
+            answers.notes = document.getElementById('notesInput').value.trim();
+
+            fetch('/api/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(answers)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) {
+                    document.getElementById('surveyArea').style.display = 'none';
+                    document.getElementById('thankYou').classList.add('active');
+                } else {
+                    alert(data.error || '提交失败，请重试');
+                    btn.disabled = false;
+                    btn.textContent = '提交问卷';
+                }
+            })
+            .catch(() => {
+                alert('网络错误，请重试');
+                btn.disabled = false;
+                btn.textContent = '提交问卷';
+            });
+        }
+    </script>
+</body>
+</html>

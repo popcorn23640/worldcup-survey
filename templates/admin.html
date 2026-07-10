@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台管理 - 世界杯观赛调查</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #0f1a2e;
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .header h1 {
+            font-size: 20px;
+        }
+        .header .links a {
+            color: #00c853;
+            text-decoration: none;
+            font-size: 14px;
+            margin-left: 16px;
+        }
+        .header .links a:hover { text-decoration: underline; }
+
+        /* Stats cards */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #1a2a44;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-card .num {
+            font-size: 32px;
+            font-weight: 700;
+            color: #00c853;
+        }
+        .stat-card .label {
+            font-size: 13px;
+            color: #8899b4;
+            margin-top: 4px;
+        }
+
+        /* Table */
+        .table-wrap {
+            background: #1a2a44;
+            border-radius: 12px;
+            overflow-x: auto;
+            padding: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        th {
+            background: #25344a;
+            color: #8899b4;
+            font-weight: 600;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #25344a;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .tag-yes { background: #00c85322; color: #69f0ae; }
+        .tag-no { background: #ff174422; color: #ff8a80; }
+        .notes-cell {
+            color: #b0bcd4;
+            font-size: 13px;
+            max-width: 160px;
+        }
+        .empty {
+            text-align: center;
+            color: #8899b4;
+            padding: 40px 20px;
+        }
+        .loading {
+            text-align: center;
+            color: #8899b4;
+            padding: 40px;
+        }
+        .refresh-btn {
+            background: #00c853;
+            color: #0f1a2e;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .refresh-btn:active { opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚽ 调查记录</h1>
+        <div class="links">
+            <button class="refresh-btn" onclick="loadData()">刷新</button>
+            <a href="/">← 返回问卷</a>
+            <a href="/admin/logout">退出</a>
+        </div>
+    </div>
+
+    <div class="stats" id="statsArea">
+        <div class="stat-card"><div class="num" id="statTotal">-</div><div class="label">总提交数</div></div>
+        <div class="stat-card"><div class="num" id="statQ1">-</div><div class="label">第1题「是」</div></div>
+        <div class="stat-card"><div class="num" id="statQ2">-</div><div class="label">第2题「是」</div></div>
+        <div class="stat-card"><div class="num" id="statQ3">-</div><div class="label">第3题「是」</div></div>
+    </div>
+
+    <div class="table-wrap">
+        <div id="loading" class="loading">加载中...</div>
+        <table id="resultsTable" style="display:none">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>备注</th>
+                    <th>11号直播</th>
+                    <th>12号第一场</th>
+                    <th>12号第二场</th>
+                    <th>提交时间</th>
+                    <th>IP</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div id="emptyState" class="empty" style="display:none">暂无提交记录</div>
+    </div>
+
+    <script>
+        function loadData() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultsTable').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'none';
+
+            Promise.all([
+                fetch('/api/results').then(r => r.json()),
+                fetch('/api/stats').then(r => r.json())
+            ])
+            .then(([results, stats]) => {
+                document.getElementById('statTotal').textContent = stats.total;
+                document.getElementById('statQ1').textContent = stats.q1_yes;
+                document.getElementById('statQ2').textContent = stats.q2_yes;
+                document.getElementById('statQ3').textContent = stats.q3_yes;
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (results.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = '';
+                results.forEach(r => {
+                    const tr = document.createElement('tr');
+                    const notes = r.notes || '';
+                    tr.innerHTML = `
+                        <td>${r.id}</td>
+                        <td class="notes-cell" title="${notes.replace(/"/g, '&quot;')}">${notes || '-'}</td>
+                        <td><span class="tag tag-${r.q1 === '是' ? 'yes' : 'no'}">${r.q1}</span></td>
+                        <td><span class="tag tag-${r.q2 === '是' ? 'yes' : 'no'}">${r.q2}</span></td>
+                        <td><span class="tag tag-${r.q3 === '是' ? 'yes' : 'no'}">${r.q3}</span></td>
+                        <td>${r.submitted_at}</td>
+                        <td style="color:#8899b4;font-size:12px">${r.ip_address}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                document.getElementById('resultsTable').style.display = '';
+            })
+            .catch(err => {
+                document.getElementById('loading').textContent = '加载失败，请刷新重试';
+            });
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
